@@ -16,26 +16,39 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
-  const user = new User({
-    _id: mongoose.Types.ObjectId(),
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    emailAddress: req.body.emailAddress,
-    password: req.body.password,
-    location: req.body.location,
-    mobileNumber: req.body.mobileNumber,
+router.post("/signup", (req, res) => {
+  bcrypt.hash(req.body.password, 10, (err, hash) => {
+    if (err) {
+      res.status(500).json({
+        message: "Error in hashing the password",
+        error: err,
+      });
+    } else {
+      const user = new User({
+        _id: mongoose.Types.ObjectId(),
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        emailAddress: req.body.emailAddress,
+        password: hash,
+        location: req.body.location,
+        mobileNumber: req.body.mobileNumber,
+      });
+
+      user
+        .save()
+        .then((result) => {
+          res.status(201).json({
+            message: "new user created",
+          });
+        })
+        .catch((err) => {
+          res.status(500).json({
+            message: "Error in creating a new user",
+            error: err,
+          });
+        });
+    }
   });
-
-  try {
-    const savedUser = await user.save();
-
-    res.status(200).json(savedUser);
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "User saved successfully", savedUser: savedUser });
-  }
 });
 
 module.exports = router;
